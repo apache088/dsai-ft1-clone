@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import joblib
 from groq import Groq
-
 import os
+import requests
+import joblib
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -71,8 +74,6 @@ def prediction():
     pred = model.predict([[q]])
     return(render_template("prediction.html",r=pred))
 
-import requests
-
 @app.route("/telegram",methods=["GET","POST"])
 def telegram():
     domain_url = 'https://dsai-ft1-clone-kpj8.onrender.com'
@@ -132,6 +133,21 @@ def webhook():
             "text": response_message
         })
     return('ok', 200)
+
+model = joblib.load('model.pkl')
+model1 = SentenceTransformer('all-MiniLM-L6-v2')
+
+@app.route("/spam",methods=["GET","POST"])
+def spam():
+    return(render_template("spam.html"))
+
+@app.route('/spam_reply', methods=['POST'])
+def spam_reply():
+    data = request.get_json()
+    sentence = data['text']
+    X_emb = model1.encode(sentence)
+    pred = model.predict(np.array(X_emb).reshape(1, -1))
+    return jsonify({'prediction': int(pred[0])})
 
 if __name__ == "__main__":
     app.run()
