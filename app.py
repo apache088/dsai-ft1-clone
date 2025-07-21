@@ -134,15 +134,15 @@ def webhook():
         })
     return('ok', 200)
 
-model = joblib.load('model.pkl')
-model1 = SentenceTransformer('all-MiniLM-L6-v2')
-
 @app.route("/spam",methods=["GET","POST"])
 def spam():
     return(render_template("spam.html"))
 
 @app.route('/spam_reply', methods=['POST'])
 def spam_reply():
+    model = joblib.load('model.pkl')
+    model1 = SentenceTransformer('all-MiniLM-L6-v2')
+
     data = request.get_json()
     sentence = data['text']
     X_emb = model1.encode(sentence)
