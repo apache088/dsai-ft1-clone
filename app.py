@@ -6,6 +6,7 @@ import requests
 import joblib
 import numpy as np
 from sentence_transformers import SentenceTransformer
+import sqlite3
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -18,7 +19,11 @@ def index():
 @app.route("/main",methods=["GET","POST"])
 def main():
     q = request.form.get("q")
-    # db
+    # db - insert
+    conn = sqlite3.connect('user.db')
+    conn.execute('INSERT INTO user (name, timestamp) VALUES (?, ?)', (q, datetime.datetime.now()))
+    conn.commit()
+    conn.close()
     return(render_template("main.html"))
 
 @app.route("/llama",methods=["GET","POST"])
@@ -148,6 +153,28 @@ def spam_reply():
     X_emb = model1.encode(sentence)
     pred = model.predict(np.array(X_emb).reshape(1, -1))
     return jsonify({'prediction': int(pred[0])})
+
+@app.route("/read_logs",methods=["GET","POST"])
+def user_log():
+    conn = sqlite3.connect('user.db')
+    c = conn.cursor()
+    c.execute('''select * from user''')
+    r=""
+    for row in c:
+      print(row)
+      r = r + str(row)
+    c.close()
+    conn.close()
+    return render_template("read_logs.html", r=r)
+
+@app.route("/delete_logs",methods=["GET","POST"])
+def delete_log():
+    conn = sqlite3.connect('user.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM user')
+    conn.commit()
+    conn.close()
+    return render_template("delete_logs.html", message="User log(s) deleted successfully.")
 
 if __name__ == "__main__":
     app.run()
