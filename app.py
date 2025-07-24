@@ -7,6 +7,7 @@ import joblib
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import sqlite3
+import datetime
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
